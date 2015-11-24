@@ -1,2 +1,2 @@
 # doclabels
-Labelling docs using a taxonomy with semantic similarity algorithms.
+Labelling docs using a taxonomy and semantic similarity algorithms.
