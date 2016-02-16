@@ -22,16 +22,14 @@ def prepare_cnn_input(limit=500, increment=500, prefix=strftime("%Y%m%d%H%M%S"))
     print('Source saved. time: {}'.format(time.clock() - start))
     filenames = [subject.replace(" ", "_").lower() for subject in plosdata.subject_areas]
     file_list = ['{}/{}-{}.sample'.format('data', prefix, filename) for filename in filenames]
-    padded, responses = plosdata.process_sources(file_list)
+    padded, responses, vocab = plosdata.process_sources(file_list)
 
     with open('{}-padded'.format(prefix), 'w') as f:
         json.dump(padded, f)
 
     with open('{}-responses'.format(prefix), 'w') as f2:
         json.dump(responses, f2)
-    print('padded files created. Time: {}'.format(time.clock() - start))
-    # build vocabulary
-    vocab = plosdata.build_vocabulary(padded)
+    print('padded files, responses vocab created. Time: {}'.format(time.clock() - start))
 
     # Load Word2Vec
     model = gensim.models.Word2Vec.load_word2vec_format('../GoogleNews-vectors-negative300.bin.gz', binary=True)
