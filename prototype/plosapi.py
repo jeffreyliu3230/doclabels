@@ -84,9 +84,38 @@ def sample(query='*:*', limit=500, increment=500):
     '''
     Get samples from search api.
     '''
+
     docs = []
-    start = time.clock()
     for i in xrange(0, limit, increment):
-        docs.extend(search({'q': query, 'rows': increment, 'start': i}))
-    logger.info("{} results returned in {} seconds.".format(limit, time.clock - start))
-    return docs
+        result = search({'q': query, 'rows': increment, 'start': i})
+        if len(result) == 0:
+            break
+        else:
+            docs.extend(result)
+        return docs
+
+
+def get_num(query='*:*'):
+    '''
+        Get number of documents for a subject.
+    '''
+
+    if isinstance(query, str):
+        query = {'q': quote(query)}
+    else:
+        if 'q' not in query:
+            query['q'] = '*:*'  # make sure we include a 'q' parameter
+        else:
+            query['q'] = quote(query['q'])
+    query['wt'] = 'json'  # make sure the return type is json
+    # search only for articles
+    query['fq'] = quote('doc_type:full AND article_type:"research article"')
+    query['api_key'] = api_key
+
+    url = searchUrl
+
+    for part in query:
+        url += '%s%s=%s' % ('&' if url is not searchUrl else '',
+                            part, query[part])
+    logger.info('making request to {}'.format(url))
+    return json.load(urlopen(url), encoding='UTF-8')['response']['numFound']
