@@ -4,8 +4,12 @@ from invoke import run, task
 from time import strftime
 
 
+__defaultInc__ = 500
+__defaultLimit__ = 500
+
+
 @task
-def prepare_cnn_input(limit=500, increment=500, prefix=strftime("%Y%m%d%H%M%S")):
+def prepare_cnn_input(limit=__defaultInc__, increment=__defaultLimit__, prefix=str(strftime("%Y%m%d%H%M%S"))):
     '''
     Prepare input data for tensor flow
     '''
@@ -18,7 +22,7 @@ def prepare_cnn_input(limit=500, increment=500, prefix=strftime("%Y%m%d%H%M%S"))
 
     start = time.clock()
     # Process and save source files
-    source = plosdata.save_source('./data', prefix=prefix, limit=limit, increment=increment)
+    plosdata.save_source('./data', prefix=prefix, limit=limit, increment=increment)
     print('Source saved. time: {}'.format(time.clock() - start))
     filenames = [subject.replace(" ", "_").lower() for subject in plosdata.subject_areas]
     file_list = ['{}/{}-{}.sample'.format('data', prefix, filename) for filename in filenames]

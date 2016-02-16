@@ -92,7 +92,7 @@ def sample(query='*:*', limit=500, increment=500):
             break
         else:
             docs.extend(result)
-        return docs
+    return docs
 
 
 def get_num(query='*:*'):

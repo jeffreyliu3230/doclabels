@@ -47,7 +47,7 @@ def save_source(filepath, prefix='', subject_areas=subject_areas, limit=__defaul
         filename = subject.replace(" ", "_").lower()
         with open('{}/{}-{}.sample'.format(filepath, prefix, filename), 'w') as f:
             json.dump(source, f)
-        logger.info("{} results returned in {} hours.".format(limit, time.clock() - start))
+        logger.info("{} results returned in time: {}.".format(limit, time.clock() - start))
 
 
 def load_source(filename):
