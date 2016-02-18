@@ -1,3 +1,6 @@
+import functools
+
+
 def compose(*functions):
     ''' evaluates functions from right to left.
 

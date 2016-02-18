@@ -9,6 +9,7 @@ import time
 import datetime
 import plosdata
 import logging
+import sys
 
 from doc_cnn import DocCNN
 
@@ -42,25 +43,29 @@ print("\nParameters:")
 for attr, value in sorted(FLAGS.__flags.iteritems()):
     print("{}={}".format(attr.upper(), value))
 print("")
-
+time_start = time.clock()
 
 # Data Preparatopn
 # ==================================================
-input_data = np.load('data/small-input.npz')
+args_list = sys.argv
+input_file = sys.argv[1]
+embeddings_file = sys.argv[2]
+input_data = np.load(input_file)
 x = input_data['x']
 y = input_data['y']
-embeddings = np.load('data/small-embeddings.npz')['arr_0']
-
-
+embeddings = np.load(embeddings_file)['arr_0']
+split = sys.argv[3]
+cut = int(y.shape[0] * float(split))
+logging.info('cut point: {}'.format(cut))
 # Randomly shuffle data
-np.random.seed(10)
+np.random.seed(100)
 shuffle_indices = np.random.permutation(np.arange(len(y)))
 x_shuffled = x[shuffle_indices]
 y_shuffled = y[shuffle_indices]
 # Split train/test set
 # TODO: This is very crude, should use cross-validation
-x_train, x_dev = x_shuffled[:-1000], x_shuffled[-1000:]
-y_train, y_dev = y_shuffled[:-1000], y_shuffled[-1000:]
+x_train, x_dev = x_shuffled[:-cut], x_shuffled[-cut:]
+y_train, y_dev = y_shuffled[:-cut], y_shuffled[-cut:]
 print("Vocabulary Size: {:d}".format(len(embeddings)))
 print("Train/Dev split: {:d}/{:d}".format(len(y_train), len(y_dev)))
 
@@ -165,6 +170,7 @@ with tf.Graph().as_default():
         batches = plosdata.batch_iter(
             zip(x_train, y_train), FLAGS.batch_size, FLAGS.num_epochs)
         # Training loop. For each batch...
+
         for batch in batches:
             x_batch, y_batch = zip(*batch)
             train_step(x_batch, y_batch)
@@ -185,3 +191,6 @@ with tf.Graph().as_default():
             if current_step % FLAGS.checkpoint_every == 0:
                 path = saver.save(sess, checkpoint_prefix, global_step=current_step)
                 print("Saved model checkpoint to {}\n".format(path))
+time_end = time.clock()
+with open('tasks.time', 'a') as ft:
+    ft.write("{} training complete. Total time: {}".format(sys.argv[1], time_start - time_end))
