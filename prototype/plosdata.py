@@ -15,6 +15,7 @@ reload(plosapi)
 
 __defaultInc__ = 500
 __defaultLimit__ = 500
+__defaultStart__ = 0
 __vecDimension__ = 300
 
 logger = logging.getLogger(__name__)
@@ -32,7 +33,7 @@ def _generate_response_map(subject_areas):
 response_map = _generate_response_map(subject_areas)
 
 
-def save_source(filepath, prefix='', subject_areas=subject_areas, limit=__defaultLimit__, increment=__defaultInc__):
+def save_source(filepath, prefix='', subject_areas=subject_areas, limit=__defaultLimit__, increment=__defaultInc__, start=__defaultStart__):
     """
     Save source data from PLOS given a subject area of a list of subject areas.
     Can specify the size of the sample you want.
@@ -42,7 +43,7 @@ def save_source(filepath, prefix='', subject_areas=subject_areas, limit=__defaul
     for subject in subject_areas:
         logger.info('{} documents to be saved for the subject: {}'.format(limit, subject))
         start = time.clock()
-        docs = plosapi.sample('subject:\"{}\"'.format(subject), limit, increment)
+        docs = plosapi.sample('subject:\"{}\"'.format(subject), limit, increment, start)
         source = {'response': response_map[subject], 'docs': docs}
         filename = subject.replace(" ", "_").lower()
         with open('{}/{}-{}.sample'.format(filepath, prefix, filename), 'w') as f:
@@ -76,6 +77,18 @@ def clean_str(string):
     Original taken from https://github.com/yoonkim/CNN_sentence/blob/master/process_data.py
     """
     string = re.sub("[^A-Za-z0-9(),!?\'\`]", " ", string)
+    string = re.sub(r"\'s", " \'s", string)
+    string = re.sub(r"\'ve", " \'ve", string)
+    string = re.sub(r"n\'t", " n\'t", string)
+    string = re.sub(r"\'re", " \'re", string)
+    string = re.sub(r"\'d", " \'d", string)
+    string = re.sub(r"\'ll", " \'ll", string)
+    string = re.sub(r",", " , ", string)
+    string = re.sub(r"!", " ! ", string)
+    string = re.sub(r"\(", " \( ", string)
+    string = re.sub(r"\)", " \) ", string)
+    string = re.sub(r"\?", " \? ", string)
+    string = re.sub(r"\s{2,}", " ", string)
     string = re.sub("  ", " ", string)
     return string.strip().lower()
 

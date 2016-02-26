@@ -80,13 +80,13 @@ def ids(limit=10, offset=0):
     return [r['id'] for r in results]
 
 
-def sample(query='*:*', limit=500, increment=500):
+def sample(query='*:*', limit=500, increment=500, start=0):
     '''
     Get samples from search api.
     '''
 
     docs = []
-    for i in xrange(0, limit, increment):
+    for i in xrange(start, limit, increment):
         result = search({'q': query, 'rows': increment, 'start': i})
         if len(result) == 0:
             break

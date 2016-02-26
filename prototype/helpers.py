@@ -23,3 +23,12 @@ def compose(*functions):
     def inner(func1, func2):
         return lambda *x, **y: func1(func2(*x, **y))
     return functools.reduce(inner, functions)
+
+
+def iter_doc(f, shuffled_indices):
+    for i in shuffled_indices:
+        for j, line in enumerate(f):
+            if i == j:
+                yield line
+                f.seek(0)
+                break

@@ -17,9 +17,23 @@ def download_source(limit=__defaultInc__, increment=__defaultLimit__, prefix=str
     '''
     Download data from plos api.
     '''
+    import sys
+    sys.path.append('../../doclabels')
+    import json
+    import numpy as np
+    import csv
+    import plosdata
     start = time.clock()
-    plosdata.save_source('./data', prefix=prefix, limit=limit, increment=increment, subject_areas=alt_sa)
+    plosdata.save_source('./data', prefix=prefix, limit=limit, increment=increment)
     print('Source saved. time: {}'.format(time.clock() - start))
+
+
+@task
+def prepare_input(prefix):
+    '''
+    Prepare input data for scikit-learn classifiers.
+    '''
+
 
 
 @task
