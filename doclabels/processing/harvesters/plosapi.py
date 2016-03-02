@@ -3,9 +3,8 @@ import logging
 import time
 
 from urllib2 import urlopen, quote
-from settings.local import PLOS_API_KEY
+from local import api_key
 
-logging.basicConfig(filename='plosapi.log', level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
@@ -85,14 +84,12 @@ def sample(query='*:*', limit=500, increment=500, start=0):
     Get samples from search api.
     '''
 
-    docs = []
     for i in xrange(start, limit, increment):
         result = search({'q': query, 'rows': increment, 'start': i})
         if len(result) == 0:
             break
         else:
-            docs.extend(result)
-    return docs
+            yield result
 
 
 def get_num(query='*:*'):

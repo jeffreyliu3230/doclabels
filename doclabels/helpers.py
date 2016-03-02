@@ -1,5 +1,5 @@
 import functools
-
+import re
 
 def compose(*functions):
     ''' evaluates functions from right to left.
