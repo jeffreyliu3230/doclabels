@@ -70,3 +70,4 @@ GoogleNews-vectors-negative300.bin.gz
 *.xml
 data/
 prototype/
+local.py
