@@ -43,6 +43,7 @@ class PLOSHarvester(BaseHarvester):
                 logger.info("{} results returned in time: {}.".format(limit, time.clock() - tick))
                 time.sleep(1)
         logger.info('PLOS data harvested. time: {}\n'.format(time.clock() - tick))
+        time.sleep(10)
 
     def process(self, doc, subject, stamp, pad=False):
         """
