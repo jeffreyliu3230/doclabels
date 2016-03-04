@@ -56,41 +56,56 @@ class BaseHarvester(object):
 
 
 class MongoManager(BaseDataBaseManager):
-    def __init__(self, uri=None, timeout=None, database=None, raw=None, **kwargs):
+    def __init__(self, uri=None, timeout=None, database=None, **kwargs):
         self.uri = settings.MONGO_URI
         self.database = settings.MONGO_DATABASE
-        self.raw = settings.MONGO_DATABASE_RAW
         self.client = None
         self.db = None
-        self.db_raw = None
-        self.subject_collections = map(lambda x: x.replace(' ', '_').lower(), settings.SUBJECT_AREAS)
+        self.collection = None
+        self.collection_raw = None
 
     def setup(self):
         try:
             self.client = MongoClient(self.uri)
             self.db = self.client[self.database]
-            self.db_raw = self.client[self.raw]
-            self.db.doclabels.create_index('id', unique=True)
-            self.db_raw.doclabels.create_index('id', unique=True)
+            try:
+                db.doclabels.getIndexes()
+            except:
+                self.db.doclabels.create_index('id', unique=True)
+            try:
+                db.doclabels_raw.getIndexes()
+            except:
+                self.db.doclabels_raw.create_index('id', unique=True)
+            try:
+                self.db.counters.insert({'_id': 'docid', 'seq': 0})
+            except:
+                pass
         except:
             logging.error("Failed to connect to Mongodb.")
             raise
 
     def tear_down(self, dbname=None):
-        self.client.drop_database(dbname)
+        pass
 
-    def clear(self, dbname=None, collection=None, force=False):
+    def clear(self, force=False):
         assert force, "Force must be called."
-        self.client[dbname][collection].remove({})
+        self.client.drop_database(self.db)
 
     def celery_setup(self, *args, **kwargs):
         pass
 
+    def get_next_sequence(self, name):
+        return self.db.counters.find_and_modify(
+            query={'_id': name},
+            update={'$inc': {'seq': 1}},
+            new=True).seq
+
 
 class ElasticsearchManager(BaseDataBaseManager):
-    def __init__(self, uri=None, timeout=None, index=None, **kwargs):
+    def __init__(self, uri=None, timeout=None, index=None, raw=None, **kwargs):
         self.uri = uri or settings.ELASTIC_URI
         self.index = index or settings.ELASTIC_INDEX
+        self.raw = raw or settings.ELASTIC_INDEX_RAW
         self.es = None
         self.kwargs = {
             'timeout': timeout or settings.ELASTIC_TIMEOUT,
@@ -99,9 +114,10 @@ class ElasticsearchManager(BaseDataBaseManager):
         self.kwargs.update(kwargs)
 
     def setup(self):
-        '''Sets up the database connection. Returns True if the database connection
-            is successful, False otherwise
-        '''
+        """
+        Sets up the database connection. Returns True if the database connection
+        is successful, False otherwise
+        """
         try:
             # If we cant connect to elastic search dont define this class
             self.es = Elasticsearch(self.uri, **self.kwargs)
@@ -114,14 +130,15 @@ class ElasticsearchManager(BaseDataBaseManager):
             return False
 
     def tear_down(self):
-        '''since it's just http, doesn't do much
-        '''
+        """
+        since it's just http, doesn't do much
+        """
         pass
 
-    def clear(self, force=False):
+    def clear(self, index, force=False):
         assert force, 'Force must be called to clear the database'
-        assert self.index != settings.ELASTIC_INDEX, 'Cannot erase the production database'
-        self.es.indices.delete(index=self.index, ignore=[400, 404])
+        # assert self.index != settings.ELASTIC_INDEX, 'Cannot erase the production database'
+        self.es.indices.delete(index=index, ignore=[400, 404])
 
     def celery_setup(self, *args, **kwargs):
         pass
@@ -130,14 +147,32 @@ class ElasticsearchManager(BaseDataBaseManager):
 class MongoProcessor(BaseProcessor):
     manager = MongoManager()
 
-    def save_raw(self, raw):
-        self.manager.db_raw.doclabels.insert(raw)
+    def save_raw(self, raw, docid):
+        labels = raw.pop('labels', None)
+        stamp = raw.pop('stamp', None)
+        self.manager.db.doclabels_raw.update_one(
+            {'_id': docid},
+            {'$setOnInsert': raw, '$addToSet': {'labels': {'$each': labels}}, '$push': {'stamp': {'$each': stamp}}},
+            upsert=True)
 
-    def save_preprocessed(self, processed):
-        self.manager.db.doclabels.insert(processed)
+    def save_preprocessed(self, processed, docid):
+        labels = processed.pop('labels', None)
+        stamp = processed.pop('stamp', None)
+        self.manager.db.doclabels.update_one(
+            {'_id': processed['id']},
+            {'$setOnInsert': processed, '$addToSet': {'labels': {'$each': labels}}, '$push': {'stamp': {'$each': stamp}}},
+            upsert=True)
+
+    def save(self, raw, processed):
+        docid = manager.get_next_sequence("docid")
+        self.save_raw(raw)
+        self.save_processed(processed)
 
 
 class ElasticsearchProcessor(BaseProcessor):
+    """
+    Deprecated. Now data are injected through mongo-connector.
+    """
     manager = ElasticsearchManager()
     app = Celery('elastic_search')
     app.config_from_object(settings)

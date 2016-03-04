@@ -1,0 +1,50 @@
+ {
+    "raw":{
+        "id": {
+            "type": "string",
+            "description": "Unique id of the document."
+        },
+        "doc": {
+            "type": "dict",
+            "description": "The whole document."
+        },
+        "labels": {
+            "type": "array",
+            "description": "The labels (subject areas, classes) of the document."
+        },
+        "stamp": {
+            "type": "array",
+            "description": "Indicate when was the data harvested. By default it is the exact time the harvest request starts. Can be any tags."
+        },
+        "source": {
+            "type": "string",
+            "description": "Source of the data."
+        }
+    },
+    "preprocessed": {
+        "id": {
+            "type": "string",
+            "description": "Unique id of the document."
+        },
+        "title": {
+            "type": "array",
+            "description": "Array of words."
+        },
+        "doc": {
+            "type": "array",
+            "description": "The main body of the document. Should be the abstract most of the time."
+        },
+        "labels": {
+            "type": "array",
+            "description": "The labels (subject areas, classes) of the document."
+        },
+        "stamp": {
+            "type": "array",
+            "description": "Indicate when was the data harvested. By default it is the exact time the harvest request starts. Can be any tags."
+        },
+        "source": {
+            "type": "string",
+            "description": "Source of the data."
+        }
+    }
+}

@@ -11,10 +11,17 @@ CELERY_ALWAYS_EAGER = True
 # MongoDB
 MONGO_URI = 'mongodb://localhost:27017/'
 MONGO_DATABASE = 'doclabels'
-MONGO_DATABASE_RAW = 'doclabels_raw'
+MONGO_COLLECTION_RAW = 'doclabels_raw'
+MONGO_COLLECTION = 'doclabels'
 
 # Elasticsearch
 ELASTIC_URI = 'localhost:9200'
 ELASTIC_INDEX = 'doclabels'
+ELASTIC_INDEX_RAW = 'doclabels_raw'
 ELASTIC_TIMEOUT = 10
 PLOS_DOC_TYPE = 'plos'
+
+# Harvester
+DEFAULT_INC = 500
+DEFAULT_LIMIT = 500
+DEFAULT_START = 0

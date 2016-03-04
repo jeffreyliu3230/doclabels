@@ -19,11 +19,12 @@ class PLOSHarvester(BaseHarvester):
     """
     Process data from PLOS API.
     """
-    __defaultInc__ = 500
-    __defaultLimit__ = 500
-    __defaultStart__ = 0
+    SOURCE = 'plos'
+    DEFAULT_INC = 500
+    DEFAULT_LIMIT = 500
+    DEFAULT_START = 0
 
-    def harvest(self, limit=__defaultInc__, increment=__defaultLimit__, stamp=str(strftime("%Y%m%d%H%M%S")), subject_areas=settings.SUBJECT_AREAS, start=__defaultStart__):
+    def harvest(self, limit=DEFAULT_INC, increment=DEFAULT_LIMIT, stamp=str(strftime("%Y%m%d%H%M%S")), subject_areas=settings.SUBJECT_AREAS, start=DEFAULT_START):
         """
         Download data from plos api.
         """
@@ -37,7 +38,7 @@ class PLOSHarvester(BaseHarvester):
                 for doc in docs:
                     # yield doc
                     yield {
-                        'raw': {'id': doc['id'], 'doc': doc, 'subject': subject, 'stamp': stamp},
+                        'raw': {'id': doc['id'], 'doc': doc, 'labels': [subject], 'stamp': [stamp], 'source': self.SOURCE},
                         'preprocessed': self.process(doc, subject, stamp)
                     }
                 logger.info("{} results returned in time: {}.".format(limit, time.clock() - tick))
@@ -52,8 +53,9 @@ class PLOSHarvester(BaseHarvester):
             'id': doc['id'],
             'title': compose(lambda x: x.split(" "), clean_str)(doc['title_display']),
             'doc': compose(lambda x: x.split(" "), clean_str)(doc['abstract'][0]),
-            'subject': [subject],
-            'stamp': stamp
+            'labels': [subject],
+            'stamp': [stamp],
+            'source': self.SOURCE
         }
 
     def batch_process(self, docs, subject, pad=False):

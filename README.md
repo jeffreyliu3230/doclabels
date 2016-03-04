@@ -1,2 +1,14 @@
 # doclabels
-Labelling docs by matching keywords in a taxonomy using semantic similarity algorithms.
+Labelling docs using machine learning algorithms.
+
+## Requirements  
+### MongoDB  
+    brew update  
+    brew install mongodb
+
+### Elasticsearch  
+    brew install elasticsearch
+
+### Spark
+Google it!
+

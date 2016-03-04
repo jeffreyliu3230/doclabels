@@ -16,26 +16,24 @@ logging.getLogger().addHandler(logging.StreamHandler())
 logging.basicConfig(filename='log/process.log', level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
-__defaultInc__ = 500
-__defaultLimit__ = 500
-__defaultStart__ = 0
+DEFAULT_INC = 500
+DEFAULT_LIMIT = 500
+DEFAULT_START = 0
 
 
-def process_plos(limit=__defaultInc__, increment=__defaultLimit__, stamp=str(strftime("%Y%m%d%H%M%S")), subject_areas=settings.SUBJECT_AREAS, start=__defaultStart__, async=False):
+def process_plos(limit=DEFAULT_INC, increment=DEFAULT_LIMIT, stamp=str(strftime("%Y%m%d%H%M%S")), subject_areas=settings.SUBJECT_AREAS, start=DEFAULT_START, async=False):
     settings.CELERY_ALWAYS_EAGER = not async
     harvester = PLOSHarvester()
     mongoprocessor = MongoProcessor()
-    elasticprocessor = ElasticsearchProcessor()
     mongoprocessor.manager.setup()
-    elasticprocessor.manager.setup()
-    doc_iter = harvester.harvest(stamp=stamp)
+    doc_iter = harvester.harvest(limit=limit, increment=increment, stamp=stamp, subject_areas=subject_areas, start=start)
     if async:
         mongoprocessor.batch_save_raw(doc_iter)
         elasticprocessor.batch_save_preprocessed(doc_iter)
     else:
         for doc in doc_iter:
             mongoprocessor.save_raw(doc['raw'])
-            elasticprocessor.save_preprocessed(doc['preprocessed'], doc_type=settings.PLOS_DOC_TYPE)
+            mongoprocessor.save_preprocessed(doc['preprocessed'])
 
 
 def file_to_db():
