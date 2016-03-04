@@ -29,3 +29,4 @@ def process_plos(limit=settings.DEFAULT_LIMIT, increment=settings.DEFAULT_INC, s
     else:
         for doc in doc_iter:
             mongoprocessor.save(doc['raw'], doc['preprocessed'])
+    mongoprocessor.manager.close()

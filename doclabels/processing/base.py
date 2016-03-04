@@ -83,6 +83,12 @@ class MongoManager(BaseDataBaseManager):
             logging.error("Failed to connect to Mongodb.")
             raise
 
+    def close(self):
+        """
+        Close connection.
+        """
+        self.client.close()
+
     def tear_down(self, force=False):
         pass
 
