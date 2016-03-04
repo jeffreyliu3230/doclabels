@@ -83,8 +83,10 @@ def sample(query='*:*', limit=500, increment=500, start=0):
     '''
     Get samples from search api.
     '''
+    if increment > limit:
+        increment = limit
 
-    for i in xrange(start, limit, increment):
+    for i in xrange(start, start + limit, increment):
         result = search({'q': query, 'rows': increment, 'start': i})
         if len(result) == 0:
             break
