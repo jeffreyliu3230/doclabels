@@ -16,7 +16,7 @@ logging.basicConfig(filename='log/process.log', level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 
-def process_plos(limit=settings.DEFAULT_INC, increment=settings.DEFAULT_LIMIT, stamp=str(strftime("%Y%m%d%H%M%S")),
+def process_plos(limit=settings.DEFAULT_LIMIT, increment=settings.DEFAULT_INC, stamp=str(strftime("%Y%m%d%H%M%S")),
                  subject_areas=settings.SUBJECT_AREAS, start=settings.DEFAULT_START, async=False):
     settings.CELERY_ALWAYS_EAGER = not async
     harvester = PLOSHarvester()
