@@ -6,6 +6,11 @@ from invoke import run, task
 from time import strftime
 
 
+logging.getLogger().addHandler(logging.StreamHandler())
+logging.basicConfig(filename='log/tasks.log', level=logging.DEBUG)
+logger = logging.getLogger(__name__)
+
+
 @task
 def start_services():
     """
@@ -36,13 +41,11 @@ def process_plos(limit=settings.DEFAULT_LIMIT, increment=settings.DEFAULT_INC, s
 @task
 def mass_process_plos(limit=settings.DEFAULT_LIMIT, increment=settings.DEFAULT_INC, stamp=str(strftime("%Y%m%d%H%M%S")), subject_areas=settings.SUBJECT_AREAS, start=settings.DEFAULT_START, async=False):
     """
-    Use task-spooler, split the harvester job into small chunks.
+    Split the harvester job into small chunks.
     """
-    import os
+    from doclabels.processing.process import process_plos
     for i in xrange(start, start + limit, increment):
-        os.system('ts -L {}:{}-{}/{} inv process_plos --limit {} --increment {} --stamp {} --start {}'.format(
-            start, i - start, i - start + increment, limit, increment, increment, stamp, i))
-    os.system('ts -l')
+        process_plos(limit=increment, increment=increment, stamp=stamp, subject_areas=subject_areas, start=i, async=async)
 
 
 @task

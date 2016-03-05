@@ -40,10 +40,9 @@ class PLOSHarvester(BaseHarvester):
                         'raw': {'doc_id': doc['id'], 'doc': doc, 'labels': [subject], 'stamp': [stamp], 'source': self.SOURCE},
                         'preprocessed': self.process(doc, subject, stamp)
                     }
-                logger.info("{} results returned in time: {}.".format(limit, time.clock() - tick))
-                time.sleep(1)
+                logger.info("{} results returned in time: {}.".format(increment, time.clock() - tick))
+                time.sleep(5)
         logger.info('PLOS data harvested. time: {}\n'.format(time.clock() - tick))
-        time.sleep(10)
 
     def process(self, doc, subject, stamp, pad=False):
         """
