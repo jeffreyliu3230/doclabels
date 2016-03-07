@@ -63,9 +63,9 @@ class MongoManager(BaseDataBaseManager):
         self.collection = None
         self.collection_raw = None
 
-    def setup(self):
+    def setup(self, client=None):
         try:
-            self.client = MongoClient(self.uri)
+            self.client = client or MongoClient(self.uri)
             self.db = self.client[self.database]
             try:
                 db.doclabels.getIndexes()

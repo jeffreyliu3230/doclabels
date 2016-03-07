@@ -35,7 +35,10 @@ def process_plos(limit=settings.DEFAULT_LIMIT, increment=settings.DEFAULT_INC, s
     Save PLOS data to MongoDB.
     """
     from doclabels.processing.process import process_plos
-    process_plos(limit=limit, increment=increment, stamp=stamp, subject_areas=subject_areas, start=start, async=async)
+    from pymongo import MongoClient
+    client = MongoCLient(settings.MONGO_URI)
+    process_plos(client, limit=limit, increment=increment, stamp=stamp, subject_areas=subject_areas, start=start, async=async)
+    client.close()
 
 
 @task
@@ -44,8 +47,11 @@ def mass_process_plos(limit=settings.DEFAULT_LIMIT, increment=settings.DEFAULT_I
     Split the harvester job into small chunks.
     """
     from doclabels.processing.process import process_plos
+    from pymongo import MongoClient
+    client = MongoCLient(settings.MONGO_URI)
     for i in xrange(start, start + limit, increment):
-        process_plos(limit=increment, increment=increment, stamp=stamp, subject_areas=subject_areas, start=i, async=async)
+        process_plos(client, limit=increment, increment=increment, stamp=stamp, subject_areas=subject_areas, start=i, async=async)
+    client.close()
 
 
 @task
