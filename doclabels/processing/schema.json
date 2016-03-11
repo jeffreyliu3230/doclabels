@@ -1,6 +1,6 @@
  {
     "raw":{
-        "id": {
+        "docid": {
             "type": "string",
             "description": "Unique id of the document."
         },
@@ -22,7 +22,7 @@
         }
     },
     "preprocessed": {
-        "id": {
+        "docid": {
             "type": "string",
             "description": "Unique id of the document."
         },

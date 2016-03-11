@@ -2,7 +2,6 @@ import abc
 import csv
 import json
 import logging
-import numpy as np
 import settings
 import sys
 import time
@@ -10,10 +9,12 @@ import yaml
 from celery import Celery
 from time import strftime
 from pymongo import MongoClient
-
+from random import SystemRandom
 
 logging.basicConfig(filename='log/process.log', level=logging.DEBUG)
 logger = logging.getLogger(__name__)
+
+random = SystemRandom()
 
 
 class BaseDataBaseManager(object):
@@ -67,14 +68,16 @@ class MongoManager(BaseDataBaseManager):
         try:
             self.client = client or MongoClient(self.uri)
             self.db = self.client[self.database]
+            self.collection = self.db[settings.MONGO_COLLECTION]
+            self.collection_raw = self.db[settings.MONGO_COLLECTION_RAW]
             try:
-                db.doclabels.getIndexes()
+                self.collection.getIndexes()
             except:
-                self.db.doclabels.create_index('doc_id', unique=True)
+                self.collection.create_index('doc_id', unique=True)
             try:
-                db.doclabels_raw.getIndexes()
+                self.collection_raw.getIndexes()
             except:
-                self.db.doclabels_raw.create_index('doc_id', unique=True)
+                self.collection_raw.create_index('doc_id', unique=True)
             try:
                 self.db.counters.insert({'_id': 'item_id', 'seq': 0})
             except:
@@ -113,7 +116,7 @@ class MongoProcessor(BaseProcessor):
         labels = raw.pop('labels', None)
         stamp = raw.pop('stamp', None)
         raw['_id'] = item_id
-        self.manager.db.doclabels_raw.update_one(
+        self.manager.collection_raw.update_one(
             {'doc_id': raw['doc_id']},
             {'$setOnInsert': raw, '$addToSet': {'labels': {'$each': labels}}, '$push': {'stamp': {'$each': stamp}}},
             upsert=True)
@@ -122,7 +125,7 @@ class MongoProcessor(BaseProcessor):
         labels = processed.pop('labels', None)
         stamp = processed.pop('stamp', None)
         processed['_id'] = item_id
-        self.manager.db.doclabels.update_one(
+        self.manager.collection.update_one(
             {'doc_id': processed['doc_id']},
             {'$setOnInsert': processed, '$addToSet': {'labels': {'$each': labels}}, '$push': {'stamp': {'$each': stamp}}},
             upsert=True)
@@ -131,3 +134,52 @@ class MongoProcessor(BaseProcessor):
         item_id = self.manager.get_next_sequence("item_id")
         self.save_raw(raw, item_id)
         self.save_preprocessed(processed, item_id)
+
+    def fetch_ids(self):
+        return [i['_id'] for i in self.manager.collection.find({}, {'_id': 1})]
+
+    def stream_documents(self, ids=None):
+        """
+        Stream documents from db given a list of ids in random order.
+        """
+        ids = ids or self.fetch_ids()
+        for objectid in ids:
+            yield self.manager.collection.find_one({'_id': objectid})
+
+    def iter_batch(self, ids, batch_size=settings.DEFAULT_BATCH_SIZE, epochs=settings.DEFAULT_EPOCHS):
+        """
+        Yield data one batch at a time.
+        """
+        data_size = len(ids)
+        num_batches_per_epoch = int(data_size / batch_size) + 1
+        for epoch in range(epochs):
+            # Shuffle the indices at each epoch
+            shuffled_indices = random.sample(ids, data_size)
+            for batch_num in range(num_batches_per_epoch):
+                start_index = batch_num * batch_size
+                end_index = min((batch_num + 1) * batch_size, data_size)
+                if not start_index == end_index:
+                    yield list(self.manager.collection.find({'_id': {'$in': shuffled_indices[start_index:end_index]}}))
+
+    def batch_xy(self, ids, batch_size=settings.DEFAULT_BATCH_SIZE, epochs=settings.DEFAULT_EPOCHS, use_title=True):
+        """
+        Yield explanatory and response data separately.
+        """
+        data_size = len(ids)
+        num_batches_per_epoch = int(data_size / batch_size) + 1
+        for epoch in range(epochs):
+            # Shuffle the indices at each epoch
+            shuffled_indices = random.sample(ids, data_size)
+            for batch_num in range(num_batches_per_epoch):
+                start_index = batch_num * batch_size
+                end_index = min((batch_num + 1) * batch_size, data_size)
+                if not start_index == end_index:
+                    docs = self.manager.collection.find({'_id': {'$in': shuffled_indices[start_index:end_index]}})
+                    y = [doc['labels'] for doc in docs]
+                    docs.rewind()
+                    if use_title:
+                        x = [doc['title'] + doc['doc'] for doc in docs]
+                    else:
+                        x = [doc['doc'] for doc in docs]
+                    docs.close()
+                    yield x, y

@@ -66,3 +66,26 @@ def get_num(subject_areas=settings.SUBJECT_AREAS):
         total += doc_num
         print("subject: {}, number of docs: {}".format(subject, doc_num))
     print("total: {}".format(total))
+
+
+@task
+def create_classes(collection=settings.MONGO_COLLECTION):
+    from doclabels.processing.process import create_classes
+    from pymongo import MongoClient
+    client = MongoClient(settings.MONGO_URI)
+    create_classes(client, collection)
+
+
+@task
+def batch_train(size=settings.DEFAULT_SAMPLE_SIZE, checkpoint=settings.DEFAULT_CHECKPOINT,
+                batch_size=settings.DEFAULT_BATCH_SIZE):
+    import random
+    import settings
+
+    from doclabels.processing.base import MongoProcessor
+    from doclabels.modeling.train import BatchTrainer
+    from pymongo import MongoClient
+    client = MongoClient(settings.MONGO_URI)
+    bt = BatchTrainer(size=size, checkpoint=checkpoint)
+    bt.setup(client)
+    bt.train(batch_size=batch_size)

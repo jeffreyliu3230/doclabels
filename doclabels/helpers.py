@@ -1,5 +1,7 @@
 import functools
 import re
+import settings
+
 
 def compose(*functions):
     ''' evaluates functions from right to left.
@@ -45,3 +47,21 @@ def clean_str(string):
     string = re.sub(r"\s{2,}", " ", string)
     string = re.sub("  ", " ", string)
     return string.strip().lower()
+
+
+def generate_response_map(labels=settings.SUBJECT_AREAS):
+    return {label: i for i, label in enumerate(labels)}
+
+
+def to_classes(labels, response_map):
+    """
+    Text labels to classes.
+    """
+    return [response_map[label] for label in labels]
+
+
+def OVR_transformer(classes, pos):
+    """
+    Tranform multi-labels to binary classes for OneVsRest classifiers.
+    """
+    return 1 if pos in classes else 0
