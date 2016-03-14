@@ -2,6 +2,13 @@
 __pycache__/
 *.py[cod]
 
+# Folders
+prototype/data/
+prototype/runs/
+
+# CSV file
+*.csv
+
 # C extensions
 *.so
 
@@ -55,3 +62,12 @@ docs/_build/
 
 # PyBuilder
 target/
+
+# Misc
+.DS_Store
+.ipynb_checkpoints/
+GoogleNews-vectors-negative300.bin.gz
+*.xml
+data/
+prototype/
+local.py
