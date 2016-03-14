@@ -1,2 +1,2 @@
 # doclabels
-Labelling docs by matching keywords in a taxonomy using semantic similarity algorithms.
+Text classification framework that supports batch training and stochastic gradient descent.
