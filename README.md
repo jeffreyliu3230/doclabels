@@ -6,9 +6,4 @@ Labelling docs using machine learning algorithms.
     brew update  
     brew install mongodb
 
-### Elasticsearch  
-    brew install elasticsearch
-
-### Spark
-Google it!
-
+pip install -R requirements.txt
